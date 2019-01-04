@@ -4,7 +4,7 @@ require_once __DIR__ . '/vendor/autoload.php'; // change path as needed
 
 $facebook_secret = json_decode(file_get_contents("facebook_secret.json"), true);
 
-//Pulls API info from facebook_secret.json and converts into a list
+//Pulls secret key API info from facebook_secret.json and converts into a list
 $fb = new \Facebook\Facebook($facebook_secret);
 
 try {

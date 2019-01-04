@@ -38,5 +38,6 @@ Thumbs.db
 
 /vendor
 test.csv
+week.csv
 facebook_secret.json
 client_secret.json
