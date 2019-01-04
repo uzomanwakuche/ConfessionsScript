@@ -1,5 +1,6 @@
 import time ,sys, gspread, csv
-from datetime import date, time, datetime, timedelta
+import pytz
+from datetime import date, time, timedelta, datetime
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -30,39 +31,38 @@ def makeFile(row):
     with open(file_name, "a") as readFile:
         reader = csv.writer(readFile)
         reader.writerow([row, conf, date])
-    print conf
+    print (conf)
 
 #  
-def weeklyGenerator(startDate):
+def weeklyGenerator(startDate, count, startNumber):
     file_name = "week.csv"
     length = len(confessions)
 
-    #Initializing variables for time between posts and starting time for posts
+    #Initializing variables for time between posts and intial start time
     delta = timedelta(minutes = 90)
     startTime = time(hour = 8, minute = 0)
-    with open(file_name, "a") as readFile:
+    with open(file_name, "w", encoding="utf-8") as readFile:
         reader = csv.writer(readFile)
+        date = datetime.strptime(startDate, "%m/%d/%y") #Converts input date to datetime object
 
-        #Converts date input from string to datetime object
-        date = datetime.strptime(startDate, '%m/%d/%y')
-        #Creates datetime object with first posting time 
-        postDate = datetime.combine(date, startTime)
+        postDate = datetime.combine(date, startTime).astimezone(pytz.utc) #Creates datetime object with initial posting time (in UTC)
 
-        for row in range(70, 0, -1):
-            number = length - row
-            conf = confessions[number][1].encode("utf-8")
-            reader.writerow([number, postDate.strftime("%m %d %Y %H:%M"), conf])
-            if postDate.hour == 21:
-                #If on last post time of the day (9:30 pm), wrap around to new day
+        for row in range(count, 0, -1):
+            count = length - row   #Finds appropriate row number of spreadsheet
+            conf = str(startNumber) + ". " + confessions[count][1] #Pulls Confession from spreadsheet and appends confession number to it
+            unix = postDate.timestamp()
+            reader.writerow([count, postDate.strftime("%m %d %Y %H:%M"), conf, unix])
+            if postDate.hour == 5:  #If on last post time of the day 9:30pm (5:30 am UTC), jump to 8am next day (4pm UTC)
                 postDate += timedelta(hours = 10, minutes = 30)  
             else:
-                #Otherwise add 90 minutes
-                postDate += delta
+                postDate += delta #Otherwise add 90 minutes
+            startNumber += 1
 
 
             
 
 
-weeklyGenerator("1/4/19")
+weeklyGenerator("1/10/19", 1, 1250)
+weeklyGenerator(sys.argv[1],int(sys.argv[2]), int(sys.argv[3]))
 #makeFile(sys.argv[1])
 #print confessions.row_values(sys.argv[1])[1].encode("utf-8")
